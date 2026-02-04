@@ -59,18 +59,75 @@
         }
         .enter-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 30px var(--accent); }
 
+	/* --- RESPONSIVE FIXES --- */
+@media (max-width: 768px) {
+    #intro-screen h1 { font-size: 2.5rem !important; }
+    #hero h1 { font-size: 2.8rem !important; }
+    .nav-links { display: none; } /* Hide nav links on mobile for a clean look, or use a burger menu */
+    
+    section { padding: 60px 0; }
+    
+    .projects-grid {
+        grid-template-columns: 1fr; /* Stack cards vertically */
+    }
+
+    #about div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important; /* Stack about text and education card */
+    }
+}
+
+/* Use clamp for fluid titles: min, preferred, max */
+h1 { font-size: clamp(2rem, 8vw, 4.5rem); }
+h2 { font-size: clamp(1.5rem, 5vw, 2.5rem); }
+
         /* --- NAVIGATION --- */
         nav {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 0; position: fixed; width: 100%; top: 0; z-index: 100;
-            background: rgba(3, 0, 5, 0.85); backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            opacity: 0; transition: opacity 1s ease;
-        }
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 100;
+    background: rgba(3, 0, 5, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    opacity: 0;
+    transition: opacity 1s ease;
+}
         .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+	.nav-container {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
         section { min-height: 100vh; padding: 120px 0; display: flex; flex-direction: column; justify-content: center; }
-        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
         .nav-links a:hover { color: var(--accent-glow); }
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none; /* Hides the links on mobile to prevent cutoff */
+    }
+    
+    .nav-container {
+        justify-content: center; /* Centers your name on mobile */
+    }
+
+    /* Scaling down the hero text so it fits portrait mode */
+    #hero h1 {
+        font-size: 2.5rem !important;
+    }
+    
+    #intro-screen h1 {
+        font-size: 2.8rem !important;
+    }
+}
 
         /* --- 3D INTERACTIVE CARDS --- */
         .tilt-container { perspective: 1000px; }
@@ -122,17 +179,18 @@
     </div>
 
     <nav id="main-nav">
-        <div class="container" style="display:flex; justify-content:space-between; width:100%; align-items: center;">
-            <div style="font-family: var(--font-heading); font-weight: 700;">SIDDHARTHAN<span style="color:var(--accent)">.</span>RM</div>
-            <ul class="nav-links">
-                <li><a href="#about">01. About</a></li>
-                <li><a href="#projects">02. Projects</a></li>
-                <li><a href="#experience">03. Experience</a></li>
-                <li><a href="#skills">04. Skills</a></li>
-                <li><a href="#contact">05. Contact</a></li>
-            </ul>
+    <div class="nav-container">
+        <div style="font-family: var(--font-heading); font-weight: 700; letter-spacing: 1px;">
+            SIDDHARTHAN<span style="color:var(--accent)">.</span>RM
         </div>
-    </nav>
+        <ul class="nav-links" style="font-family: var(--font-mono); font-size: 0.8rem;">
+            <li><a href="#about">01. About</a></li>
+            <li><a href="#projects">02. Projects</a></li>
+            <li><a href="#experience">03. Experience</a></li>
+            <li><a href="#contact">04. Contact</a></li>
+        </ul>
+    </div>
+</nav>
 
     <div class="container">
         <section id="hero">
@@ -271,7 +329,7 @@
                     <div class="skill-tag">Blueprint Scripting</div>
                     <div class="skill-tag">3D Modeling</div>
 		    <div class="skill-tag">Technical Animation</div>
-                    <div class="skill-tag">C++ VFX</div>
+                    <div class="skill-tag">C++</div>
                 </div>
                 <div class="skill-group">
                     <h3 style="color: var(--accent); margin-bottom: 20px;">Software</h3>
@@ -358,22 +416,55 @@
             requestAnimationFrame(animateThree);
         }
 
-        // --- LOCAL 3D TILT FOR CARDS ---
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const rotX = ((y - centerY) / centerY) * -15;
-                const rotY = ((x - centerX) / centerX) * 15;
-                card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.05, 1.05, 1.05)`;
-            });
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = `rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-            });
-        });
+        // --- LOCAL 3D TILT FOR CARDS (Updated for Touch & Desktop) ---
+const cards = document.querySelectorAll('.card');
+
+function handleMove(e, card) {
+    const rect = card.getBoundingClientRect();
+    
+    // Check if it's a touch event or a mouse event
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    // Calculate rotation
+    const rotX = ((y - centerY) / centerY) * -15;
+    const rotY = ((x - centerX) / centerX) * 15;
+    
+    card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.05, 1.05, 1.05)`;
+}
+
+cards.forEach(card => {
+    // DESKTOP: Mouse Interaction
+    card.addEventListener('mousemove', (e) => handleMove(e, card));
+    card.addEventListener('mouseleave', () => {
+        card.style.transform = `rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    });
+
+    // MOBILE: Touch Interaction
+    card.addEventListener('touchstart', (e) => {
+        handleMove(e, card);
+    }, { passive: true });
+
+    card.addEventListener('touchmove', (e) => {
+        handleMove(e, card);
+    }, { passive: true });
+
+    card.addEventListener('touchend', () => {
+        card.style.transform = `rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    });
+});
+
+	document.addEventListener('touchmove', (e) => {
+    if (e.touches.length > 0) {
+        mouseX = (e.touches[0].clientX - window.innerWidth / 2) / 50;
+        mouseY = (e.touches[0].clientY - window.innerHeight / 2) / 50;
+    }
+}, { passive: true });
 
         // --- UTILS ---
         function enterSite() {
